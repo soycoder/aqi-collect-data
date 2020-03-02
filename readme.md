@@ -10,11 +10,7 @@
 	
 	│--light
 	  	│-- bh1750.py                  
-		  	*/using Library/ : smbus mutibus(SDA,SCL)
-	
-	│-- test-multibus
-	   	│-- multiple_bmp280.py 
-		   	*/using Library/* : smbus mutibus(SDA,SCL)
+		  	*/using i2c/ : (SDA,SCL)
 	
 	│-- pms3003
 		│-- 
@@ -22,16 +18,7 @@
 ```
 
 .
-+-- src
-	+-- _
-	|   +-- 
-	+-- _light
-	|   +-- 
-	+-- _layouts
-	|   +-- default.html
-	+-- _
-	|   +-- 
-	+-- readme.md
+
 
 ## Data
 1. Humity, Temperature, Pressure

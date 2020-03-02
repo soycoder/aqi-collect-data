@@ -44,7 +44,7 @@ ONE_TIME_HIGH_RES_MODE_2 = 0x21
 ONE_TIME_LOW_RES_MODE = 0x23
 
 #bus = smbus.SMBus(0) # Rev 1 Pi uses 0
-bus = smbus.SMBus(4)  # Rev 2 Pi uses 1
+bus = smbus.SMBus(1)  # Rev 2 Pi uses 1
 
 def convertToNumber(data):
   # Simple function to convert 2 bytes of data
