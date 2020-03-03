@@ -63,7 +63,7 @@ def main():
     while True:
         lightLevel = readLight()
         print("Light Level : " + format(lightLevel, '.2f') + " lx")
-        print("\nTemperature: %0.1f C" % bme280.temperature)
+        print("Temperature: %0.1f C" % bme280.temperature)
         print("Humidity: %0.1f %%" % bme280.humidity)
         print("Pressure: %0.1f hPa" % bme280.pressure)
         print("Altitude = %0.2f meters" % bme280.altitude)
