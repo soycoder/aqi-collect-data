@@ -1,29 +1,8 @@
-# Devloping use python3
+# AQI collect data
+	- Place : @Thammasat University Lampang campus.
+		1. Inovation Building.
+		2. Football Field.
 
-## File
-```
-│-- src
-	│-- README.md   
-	│-- bme280
-		│-- adafruit_bme280_test.py   
-			*/using Library/* : adafruit_bme280
+ ## visit
+	web : in-process []
 	
-	│--light
-	  	│-- bh1750.py                  
-		  	*/using i2c/ : (SDA,SCL)
-	
-	│-- pms3003
-		│-- 
-    
-```
-
-.
-
-
-## Data
-1. Humity, Temperature, Pressure
-	- BME280(I2C)
-2. Light intensity
-	- bh1750(I2C)
-3. PM1.0 / 2.5 / 10
-	- pms3003
