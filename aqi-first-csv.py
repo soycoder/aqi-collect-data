@@ -1,11 +1,18 @@
 #!/usr/bin/python
 
 # ---------------------------------------------------------------------
+import datetime
 import smbus
 import time
 import board
 import busio
 import adafruit_bme280
+import RPi.GPIO as GPIO
+import csv
+
+GPIO.setmode(GPIO.BCM)           
+INPUT_PIN = 6
+GPIO.setup(INPUT_PIN, GPIO.IN) 
 # ---------------------------------------------------------------------
 # Define some constants from the datasheet
 DEVICE = 0x23  # Default device I2C address
@@ -59,15 +66,56 @@ bme280.sea_level_pressure = 1013.25
 
 
 def main():
-
+    isWrited = False
+    count_minutelyRain = 0
+    #count_hourlyRain = 0
+    #count_dailyRain = 0
     while True:
-        lightLevel = readLight()
-        print("Light Level : " + format(lightLevel, '.2f') + " lx")
-        print("Temperature: %0.1f C" % bme280.temperature)
-        print("Humidity: %0.1f %%" % bme280.humidity)
-        print("Pressure: %0.1f hPa" % bme280.pressure)
-        print("Altitude = %0.2f meters" % bme280.altitude)
-        time.sleep(2)
+        #day = '{:%d}'.format(datetime.datetime.now())
+        #hour = '{:%H}'.format(datetime.datetime.now())
+        #minute = '{:%M}'.format(datetime.datetime.now())
+        second = '{:%S}'.format(datetime.datetime.now())
+        Timestamp = '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now())
+        TimeRecord = '{:%Y-%m-%d}'.format(datetime.datetime.now())
+        if second == '59':
+            isWrited = False
+        if second == '00' and not isWrited:
+            lightLevel = readLight()
+            rain = count_minutelyRain*1.6363 # one click = 1.6363 mm. (Rainfall height)
+                                      # or one click = 9 ml. = 9 cm^3
+            count_minutelyRain = 0
+            print('\n'+'Timestamp: {:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()))
+            dict_aqi = { 'Light(lx)': format(lightLevel, '.2f')
+                        ,'Temp.(C)': format(bme280.temperature, '.2f')
+                        ,'Humi.(%)': format(bme280.humidity, '.2f')
+                        ,'Pressure(hPa)': format(bme280.pressure, '.2f')
+                        ,'Altitude(meters)': format(bme280.altitude, '.2f')
+                        ,'rain(mm)' : format(rain, '.2f')}
+            for key,val in dict_aqi.items():
+                print( key, "=>", val)
+            
+            filename = 'data/'+TimeRecord+'-aqi_part1.csv'
+            with open(filename, 'a') as newFile:
+                headers = ['TIME', 'light(lx)','temperature(C)', 'humidity(%)', 'pressure(hPa)', 'rain(mm)' ]
+                newFileWriter = csv.DictWriter(newFile, fieldnames=headers)
+                if newFile.tell() == 0:
+                    newFileWriter.writeheader()  # file doesn't exist yet, write a header
+                
+                newFileWriter.writerow(
+                    {'TIME': Timestamp
+                     ,'light(lx)' :format(lightLevel, '.2f')
+                     ,'temperature(C)' : format(bme280.temperature, '.2f')
+                     ,'humidity(%)' : format(bme280.humidity, '.2f')
+                     ,'pressure(hPa)' : format(bme280.pressure, '.2f')
+                     ,'rain(mm)' : format(rain, '.2f') })
+
+            print('-----------------------------------------------')
+            isWrited = True
+        if (GPIO.input(INPUT_PIN) == False):
+            count_minutelyRain += 1
+            #print(count_rain)
+            time.sleep(0.1)
+
 
 
 if __name__ == "__main__":
