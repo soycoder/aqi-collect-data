@@ -1,4 +1,4 @@
-from mcp3208 import MCP3208
+# from mcp3208 import MCP3208
 import time
 import datetime
 import g3
@@ -9,8 +9,8 @@ import csv
 
 air = g3.g3sensor()
 adc = MCP3208()
-name_ch_mcp = ['O3', 'NO2', 'CO', 'SO2',
-               'Wind Speed', 'Wind Direction', ' ', ' ']
+# name_ch_mcp = ['O3', 'NO2', 'CO', 'SO2',
+#                'Wind Speed', 'Wind Direction', ' ', ' ']
 
 
 def getO3():
