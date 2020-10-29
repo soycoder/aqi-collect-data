@@ -1,24 +1,37 @@
 import pymongo
 import datetime
+import csv
 
-client = pymongo.MongoClient("mongodb+srv://admin_3:*mongo3@clusterew1-uogmd.mongodb.net/test?retryWrites=true&w=majority")
-db = client.aqi-tulp
+client = pymongo.MongoClient("mongodb+srv://admin_3:*mongo3@clusterew1-uogmd.mongodb.net/aqi_tulp?retryWrites=true&w=majority")
+db = client.aqi_tulp
 col = db.datas
 
-def insent():
-    #someting
+def insert():
+    with open('demo1.csv', 'r') as csvfile:
+        # reader = csv.DictReader(csvfile)
+        
+        for row in reversed(list(csv.reader(csvfile))):
+            print(row[0])
+    # data = {}
+    # col.insert(data)
+    
 
 def update():
-    #someting
+    Filter = {}
+    NewData = {} 
+    col.update(Filter, NewData)
 
 def delete():
-    #someting
+    col.delete_one()
 
-def print():
-    #someting
+def printOne():
+    col.find_one()
 
 def printAll():
-    #someting
+    for x in col.find():
+        print(x)
 
-if __name__="__main__""
-    print("-init-")
+if __name__ == "__main__": 
+    print('init')
+    insert()
+    # printAll()
