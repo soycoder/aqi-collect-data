@@ -1,0 +1,11 @@
+[Unit]
+Description=tulp-aqi-pm3003
+After=multi-user.target
+ 
+[Service]
+Type=simple
+ExecStart=/usr/bin/python /home/pi/Desktop/aqi-collect-data/aqi-pm3003-csv.py
+Restart=on-failure
+ 
+[Install]
+WantedBy=multi-user.target
