@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 # ---------library--------------------
+import serial
 from mcp3208 import MCP3208
 import datetime
 import smbus
@@ -14,7 +15,6 @@ import csv
 from pms7003 import Pms7003Sensor
 airsensor = Pms7003Sensor('/dev/ttyAMA2')
 # --------Commu-------
-import serial
 sPortToUse = "/dev/ttyUSB0"
 # ---------------
 
@@ -59,16 +59,17 @@ def getSO2():
     return aqi_so2
 
 # def getWindSpeed():
-#     w_speed = (adc.read(4) / 4095.0) * 5.0 
+#     w_speed = (adc.read(4) / 4095.0) * 5.0
 #     w_speed = adc.read(4) * 36 * 2
 
-#     return w_speed 
+#     return w_speed
+
 
 def getWindSpeed():
-    w_speed = (adc.read(4) / 4095.0) * 5.0 # outvoltage (max : 5V) 
-    w_speed = w_speed * 6 # w_speed (max : 30 m/s) 
+    w_speed = (adc.read(4) / 4095.0) * 5.0  # outvoltage (max : 5V)
+    w_speed = w_speed * 6  # w_speed (max : 30 m/s)
 
-    return w_speed 
+    return w_speed
 
 
 def getWindDirection():
@@ -130,6 +131,7 @@ bme280.sea_level_pressure = 1013.25
 
 # ---------------------------------------------------------------------
 
+
 def sendDB(sTest):
     iBytesSent = 0
     serialPort = serial.Serial(sPortToUse, 115200)
@@ -141,13 +143,14 @@ def sendDB(sTest):
         print(sTest)
         iBytesSent = serialPort.write(sTest)
         serialPort.write(b"\n")
-        print ("Sent", iBytesSent, "bytes")
+        print("Sent", iBytesSent, "bytes")
 
     else:
         print("Port", sPortToUse, "failed to open")
     serialPort.close()
 
 # ----------------------------------------------------------
+
 
 def main():
     isWrited = False
@@ -171,25 +174,11 @@ def main():
             rain = count_minutelyRain*1.6363
             # or one click = 9 ml. = 9 cm^3
             count_minutelyRain = 0
-            
+
             dict_aqi = {
-                'TIME':Timestamp
-                ,'PM1': pmdata['pm1_0']
-                ,'PM2.5': pmdata['pm2_5']
-                ,'PM10': pmdata['pm10']
-                ,'Light(lx)': format(lightLevel, '.2f')
-                ,'Temp.(C)': format(bme280.temperature, '.2f')
-                ,'Humi.(%)': format(bme280.humidity, '.2f')
-                , 'Pressure(hPa)': format(bme280.pressure, '.2f')
-                , 'Altitude(meters)': format(bme280.altitude, '.2f')
-                , 'rain(mm)': format(rain, '.2f')
-                , 'O3': format(getO3(), '.2f')
-                , 'NO2': format(getNO2(), '.2f')
-                , 'CO': format(getCO(), '.2f')
-                , 'SO2': format(getSO2(), '.2f')
-                , 'WS': format(getWindSpeed(), '.2f')
-                , 'WDI': format(getWindDirection(), '.2f')
-                }
+                'TIME': Timestamp, 'PM1': pmdata['pm1_0'], 'PM25': pmdata['pm2_5'], 'PM10': pmdata['pm10'], 'light': format(lightLevel, '.2f'), 'temp.(C)': format(bme280.temperature, '.2f'), 'Humi.(%)': format(bme280.humidity, '.2f'), 'Pressure(hPa)': format(bme280.pressure, '.2f'), 'Altitude(meters)': format(bme280.altitude, '.2f'), 'rain(mm)': format(rain, '.2f'), 'O3': format(getO3(), '.2f'), 'NO2': format(getNO2(), '.2f'), 'CO': format(getCO(), '.2f'), 'SO2': format(getSO2(), '.2f'), 'WS': format(getWindSpeed(), '.2f'), 'WDI': format(getWindDirection(), '.2f')
+            }
+
 
             # ------Send DB----
             sText = "aqi:"
@@ -197,21 +186,23 @@ def main():
                 print(key, "=>", val)
                 if key == 'TIME':
                     pass
-                sText = sText +":" +val
+                sText = sText + ":" + val
             # print(sText)
             sTest = sText.encode('utf-8')
             print(sText)
-            sendDB(sTest)    
-                   
+            sendDB(sTest)
+
             # ---------
             filename = '/home/pi/Desktop/aqi-collect-data/data/'+TimeRecord+'-aqi.csv'
             with open(filename, 'a') as newFile:
-                headers = ['TIME','PM1(ug/m^3)','PM2.5(ug/m^3)', 'PM10(ug/m^3)', 'light(lx)', 'temperature(C)', 'humidity(%)', 'pressure(hPa)',
-                           'rain(mm)', 'O3(ppm)', 'NO2(ppm)', 'CO(ppm)', 'SO2(ppm)', 'WS(m/s)', 'WDI']
+                headers = ['TIME', 'PM1', 'PM25', 'PM10', 'light', 'temp', 'humi', 'pressure',
+                           'rain', 'O3', 'NO2', 'CO', 'SO2', 'WS', 'WDI']
                 newFileWriter = csv.DictWriter(newFile, fieldnames=headers)
                 if newFile.tell() == 0:
                     newFileWriter.writeheader()  # file doesn't exist yet, write a header
-                
+
+            newFileWriter.writerow(dict_aqi)
+
             print('-----------------------------------------------')
             isWrited = True
         if (GPIO.input(INPUT_PIN) == False):

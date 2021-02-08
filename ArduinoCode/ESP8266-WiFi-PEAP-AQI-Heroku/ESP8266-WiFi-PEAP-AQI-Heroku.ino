@@ -95,89 +95,49 @@ void loop()
         WiFiClient client;
         HTTPClient http;
 
-        if (type == "pm")
+        // get PM
+        String pm25 = getValue(line, ':', 2);
+        String pm10 = getValue(line, ':', 3);
+        // get Meteo
+        String light = getValue(line, ':', 4);
+        String temp = getValue(line, ':', 5);
+        String humi = getValue(line, ':', 6);
+        String pressure = getValue(line, ':', 7);
+        String rain = getValue(line, ':', 8);
+        String O3 = getValue(line, ':', 9);
+        String NO2 = getValue(line, ':', 10);
+        String CO = getValue(line, ':', 11);
+        String SO2 = getValue(line, ':', 12);
+        String WS = getValue(line, ':', 13);
+        String WDI = getValue(line, ':', 14);
+
+        Serial.print("[HTTP] POST...\n");
+        // configure traged server and url
+        http.begin(client, "http://express-nodejs-firebase.herokuapp.com/api/createRecord"); //HTTP
+        http.addHeader("Content-Type", "application/json");
+
+        // start connection and send HTTP header and body
+        int httpCode = http.POST("{\"pm25\": " + pm25 + ",\"pm10\": " + pm10 + ",\"light\": " + light + ",\"temp\": " + temp + ",\"humi\":" + humi + ",\"pressure\":" + pressure + ",\"rain\":" + rain + ",\"O3\":" + O3 + ",\"NO2\":" + NO2 + ",\"CO\":" + CO + ",\"SO2\":" + SO2 + ",\"WS\":" + WS + ",\"WDI\":" + WDI + "}");
+
+        // httpCode will be negative on error
+        if (httpCode > 0)
         {
-            // get PM
-            String pm25 = getValue(line, ':', 1);
-            String pm10 = getValue(line, ':', 2);
+            // HTTP header has been send and Server response header has been handled
+            Serial.printf("[HTTP] POST... code: %d\n", httpCode);
 
-            // meteo:pm2.5:pm10
-
-            Serial.print("[HTTP] POST...\n");
-            // configure traged server and url
-            http.begin(client, "http://express-nodejs-firebase.herokuapp.com/api/createRecord"); //HTTP
-            http.addHeader("Content-Type", "application/json");
-
-            // start connection and send HTTP header and body
-            int httpCode = http.POST("{\"pm25\": " + pm25 + ",\"pm10\": " + pm10 + "}");
-
-            // httpCode will be negative on error
-            if (httpCode > 0)
+            // file found at server
+            if (httpCode == HTTP_CODE_OK)
             {
-                // HTTP header has been send and Server response header has been handled
-                Serial.printf("[HTTP] POST... code: %d\n", httpCode);
-
-                // file found at server
-                if (httpCode == HTTP_CODE_OK)
-                {
-                    const String &payload = http.getString();
-                    Serial.println("received payload:\n<<");
-                    Serial.println(payload);
-                    Serial.println(">>");
-                }
+                const String &payload = http.getString();
+                Serial.println("received payload:\n<<");
+                Serial.println(payload);
+                Serial.println(">>");
             }
-            else
-            {
-                Serial.printf("[HTTP] POST... failed, error: %s\n", http.errorToString(httpCode).c_str());
-            }
-            http.end();
         }
-        else if (type == "meteo")
+        else
         {
-
-            // get Meteo
-            String light = getValue(line, ':', 1);
-            String temp = getValue(line, ':', 2);
-            String humi = getValue(line, ':', 3);
-            String pressure = getValue(line, ':', 4);
-            String rain = getValue(line, ':', 5);
-            String O3 = getValue(line, ':', 6);
-            String NO2 = getValue(line, ':', 7);
-            String CO = getValue(line, ':', 8);
-            String SO2 = getValue(line, ':', 9);
-            String WS = getValue(line, ':', 10);
-            String WDI = getValue(line, ':', 11);
-
-            // meteo:light:temp:humi:pressure:rain:O3:NO2:CO:SO2:WS:WDI
-
-            Serial.print("[HTTP] PUT...\n");
-            // configure traged server and url
-            http.begin(client, "http://express-nodejs-firebase.herokuapp.com/api/updateRecord"); //HTTP
-            http.addHeader("Content-Type", "application/json");
-
-            // start connection and send HTTP header and body
-            int httpCode = http.PUT("{\"light\": "+light+",\"temp\": "+temp+",\"humi\":"+humi+",\"pressure\":"+pressure+",\"rain\":"+rain+",\"O3\":"+O3+",\"NO2\":"+NO2+",\"CO\":"+CO+",\"SO2\":"+SO2+",\"WS\":"+WS+",\"WDI\":"+WDI+"}");
-
-            // httpCode will be negative on error
-            if (httpCode > 0)
-            {
-                // HTTP header has been send and Server response header has been handled
-                Serial.printf("[HTTP] PUT... code: %d\n", httpCode);
-
-                // file found at server
-                if (httpCode == HTTP_CODE_OK)
-                {
-                    const String &payload = http.getString();
-                    Serial.println("received payload:\n<<");
-                    Serial.println(payload);
-                    Serial.println(">>");
-                }
-            }
-            else
-            {
-                Serial.printf("[HTTP] PUT... failed, error: %s\n", http.errorToString(httpCode).c_str());
-            }
-            http.end();
+            Serial.printf("[HTTP] POST... failed, error: %s\n", http.errorToString(httpCode).c_str());
         }
+        http.end();
     }
 }
