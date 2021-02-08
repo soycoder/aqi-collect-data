@@ -6,7 +6,34 @@ import RPi.GPIO as GPIO
 import serial
 import csv
 
+# ---------------
+import serial
+sPortToUse = "/dev/ttyUSB0"
+
+# ---------------
+
 airsensor = Pms7003Sensor('/dev/ttyAMA2')
+
+def sendDB(sTest):
+    iBytesSent = 0
+    serialPort = serial.Serial(sPortToUse, 115200)
+    serialPort.flushOutput()
+    serialPort.flushInput()
+
+    if serialPort.open:
+        print("Opened port", sPortToUse)
+        print(sTest)
+        iBytesSent = serialPort.write(sTest)
+        serialPort.write(b"\n")
+        print ("Sent", iBytesSent, "bytes")
+
+    else:
+        print("Port", sPortToUse, "failed to open")
+    serialPort.close()
+
+# ----------------------------------------------------------
+
+
 def main():
     isWrited = False
     
@@ -27,9 +54,16 @@ def main():
                         }
             for key,val in dict_aqi.items():
                 print (key, " => ", val)
-                       
+
+            # ------Send DB----
+            sText = "pm:"+str(pmdata['pm2_5'])
+            sText = sText +":" + str(pmdata['pm10'])
+            # print(sText)
+            sTest = sText.encode('utf-8')
+            # print(sText)
+            sendDB(sTest)           
             
-            with open('data/'+TimeRecord+'-aqi_pm.csv', 'a') as newFile:
+            with open('/home/pi/Desktop/aqi-collect-data/data/'+TimeRecord+'-aqi_pm.csv', 'a') as newFile:
                 headers = ['TIME', 'PM1(ug/m^3)','PM2.5(ug/m^3)', 'PM10(ug/m^3)']
                 newFileWriter = csv.DictWriter(newFile, fieldnames=headers)
                 if newFile.tell() == 0:
@@ -46,8 +80,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
-
-

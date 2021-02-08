@@ -10,6 +10,11 @@ import busio
 import adafruit_bme280
 import RPi.GPIO as GPIO
 import csv
+# ---------------
+import serial
+sPortToUse = "/dev/ttyUSB0"
+
+# ---------------
 
 adc = MCP3208()
 name_ch_mcp = ['O3', 'NO2', 'CO', 'SO2',
@@ -51,13 +56,17 @@ def getSO2():
         aqi_so2 = 0
     return aqi_so2
 
+# def getWindSpeed():
+#     w_speed = (adc.read(4) / 4095.0) * 5.0 
+#     w_speed = adc.read(4) * 36 * 2
+
+#     return w_speed 
 
 def getWindSpeed():
-    w_speed = adc.read(4) / 4095.0 * 5.0
-    w_speed = adc.read(4) - 11
-    if w_speed < 0:
-        w_speed = 0
-    return w_speed % 360
+    w_speed = (adc.read(4) / 4095.0) * 5.0 # outvoltage (max : 5V) 
+    w_speed = w_speed * 6 # w_speed (max : 30 m/s) 
+
+    return w_speed 
 
 
 def getWindDirection():
@@ -119,6 +128,24 @@ bme280.sea_level_pressure = 1013.25
 
 # ---------------------------------------------------------------------
 
+def sendDB(sTest):
+    iBytesSent = 0
+    serialPort = serial.Serial(sPortToUse, 115200)
+    serialPort.flushOutput()
+    serialPort.flushInput()
+
+    if serialPort.open:
+        print("Opened port", sPortToUse)
+        print(sTest)
+        iBytesSent = serialPort.write(sTest)
+        serialPort.write(b"\n")
+        print ("Sent", iBytesSent, "bytes")
+
+    else:
+        print("Port", sPortToUse, "failed to open")
+    serialPort.close()
+
+# ----------------------------------------------------------
 
 def main():
     isWrited = False
@@ -134,6 +161,7 @@ def main():
         TimeRecord = '{:%Y-%m-%d}'.format(datetime.datetime.now())
         if second == '59':
             isWrited = False
+            lightLevel = readLight()
         if second == '00' and not isWrited:
             lightLevel = readLight()
             # one click = 1.6363 mm. (Rainfall height)
@@ -148,7 +176,26 @@ def main():
             for key, val in dict_aqi.items():
                 print(key, "=>", val)
 
-            filename = 'data/'+TimeRecord+'-aqi.csv'
+            # ------Send DB----
+            sText = "meteo:"+format(lightLevel, '.2f')
+            sText = sText +":" + format(bme280.temperature, '.2f')
+            sText = sText +":" + format(bme280.humidity, '.2f')
+            sText = sText +":" + format(bme280.pressure, '.2f')
+            sText = sText +":" + format(rain, '.2f')
+            sText = sText +":" + format(getO3(), '.2f')
+            sText = sText +":" + format(getNO2(), '.2f')
+            sText = sText +":" + format(getCO(), '.2f')
+            sText = sText +":" + format(getSO2(), '.2f')
+            sText = sText +":" + format(getWindSpeed(), '.2f')
+            sText = sText +":" + format(getWindDirection(), '.2f')
+            # print(sText)
+            sTest = sText.encode('utf-8')
+            # print(sText)
+            sendDB(sTest)
+                  
+                   
+            # ---------
+            filename = '/home/pi/Desktop/aqi-collect-data/data/'+TimeRecord+'-aqi.csv'
             with open(filename, 'a') as newFile:
                 headers = ['TIME', 'light(lx)', 'temperature(C)', 'humidity(%)', 'pressure(hPa)',
                            'rain(mm)', 'O3(ppm)', 'NO2(ppm)', 'CO(ppm)', 'SO2(ppm)', 'WS(m/s)', 'WDI']
