@@ -86,58 +86,104 @@ String line = "";
 
 void loop()
 {
-    // wait for WiFi connection
-    while (Serial.available() > 0)
+    if (WiFi.status() == WL_CONNECTED)
     {
-        line = Serial.readString();
-        String type = getValue(line, ':', 0);
-
-        WiFiClient client;
-        HTTPClient http;
-
-        // get PM
-        String pm25 = getValue(line, ':', 2);
-        String pm10 = getValue(line, ':', 3);
-        // get Meteo
-        String light = getValue(line, ':', 4);
-        String temp = getValue(line, ':', 5);
-        String humi = getValue(line, ':', 6);
-        String pressure = getValue(line, ':', 7);
-        String rain = getValue(line, ':', 8);
-        String O3 = getValue(line, ':', 9);
-        String NO2 = getValue(line, ':', 10);
-        String CO = getValue(line, ':', 11);
-        String SO2 = getValue(line, ':', 12);
-        String WS = getValue(line, ':', 13);
-        String WDI = getValue(line, ':', 14);
-
-        Serial.print("[HTTP] POST...\n");
-        // configure traged server and url
-        http.begin(client, "http://express-nodejs-firebase.herokuapp.com/api/createRecord"); //HTTP
-        http.addHeader("Content-Type", "application/json");
-
-        // start connection and send HTTP header and body
-        int httpCode = http.POST("{\"pm25\": " + pm25 + ",\"pm10\": " + pm10 + ",\"light\": " + light + ",\"temp\": " + temp + ",\"humi\":" + humi + ",\"pressure\":" + pressure + ",\"rain\":" + rain + ",\"O3\":" + O3 + ",\"NO2\":" + NO2 + ",\"CO\":" + CO + ",\"SO2\":" + SO2 + ",\"WS\":" + WS + ",\"WDI\":" + WDI + "}");
-
-        // httpCode will be negative on error
-        if (httpCode > 0)
+        // wait for WiFi connection
+        while (Serial.available() > 0)
         {
-            // HTTP header has been send and Server response header has been handled
-            Serial.printf("[HTTP] POST... code: %d\n", httpCode);
+            line = Serial.readString();
+            String type = getValue(line, ':', 0);
 
-            // file found at server
-            if (httpCode == HTTP_CODE_OK)
+            WiFiClient client;
+            HTTPClient http;
+
+            // get PM
+            String pm25 = getValue(line, ':', 2);
+            String pm10 = getValue(line, ':', 3);
+            // get Meteo
+            String light = getValue(line, ':', 4);
+            String temp = getValue(line, ':', 5);
+            String humi = getValue(line, ':', 6);
+            String pressure = getValue(line, ':', 7);
+            String rain = getValue(line, ':', 8);
+            String O3 = getValue(line, ':', 9);
+            String NO2 = getValue(line, ':', 10);
+            String CO = getValue(line, ':', 11);
+            String SO2 = getValue(line, ':', 12);
+            String WS = getValue(line, ':', 13);
+            String WDI = getValue(line, ':', 14);
+
+            if (type != "hourly")
             {
-                const String &payload = http.getString();
-                Serial.println("received payload:\n<<");
-                Serial.println(payload);
-                Serial.println(">>");
+                Serial.print("[HTTP] POST...\n");
+                // configure traged server and url
+                http.begin(client, "http://express-nodejs-firebase.herokuapp.com/api/createRecord"); //HTTP
+                http.addHeader("Content-Type", "application/json");
+
+                // start connection and send HTTP header and body
+                int httpCode = http.POST("{\"pm25\": " + pm25 + ",\"pm10\": " + pm10 + ",\"light\": " + light + ",\"temp\": " + temp + ",\"humi\":" + humi + ",\"pressure\":" + pressure + ",\"rain\":" + rain + ",\"O3\":" + O3 + ",\"NO2\":" + NO2 + ",\"CO\":" + CO + ",\"SO2\":" + SO2 + ",\"WS\":" + WS + ",\"WDI\":" + WDI + "}");
+
+                // httpCode will be negative on error
+                if (httpCode > 0)
+                {
+                    // HTTP header has been send and Server response header has been handled
+                    Serial.printf("[HTTP] POST... code: %d\n", httpCode);
+
+                    // file found at server
+                    if (httpCode == HTTP_CODE_OK)
+                    {
+                        const String &payload = http.getString();
+                        Serial.println("received payload:\n<<");
+                        Serial.println(payload);
+                        Serial.println(">>");
+                    }
+                }
+                else
+                {
+                    Serial.printf("[HTTP] POST... failed, error: %s\n", http.errorToString(httpCode).c_str());
+                }
+                http.end();
+            }
+            else
+            {
+                // Hourly
+
+                Serial.print("[HTTP] POST...\n");
+                // configure traged server and url
+                http.begin(client, "http://express-nodejs-firebase.herokuapp.com/api/hourly/createRecord"); //HTTP
+                http.addHeader("Content-Type", "application/json");
+
+                // start connection and send HTTP header and body
+                int httpCode = http.POST("{\"pm25\": " + pm25 + ",\"pm10\": " + pm10 + ",\"light\": " + light + ",\"temp\": " + temp + ",\"humi\":" + humi + ",\"pressure\":" + pressure + ",\"rain\":" + rain + ",\"O3\":" + O3 + ",\"NO2\":" + NO2 + ",\"CO\":" + CO + ",\"SO2\":" + SO2 + ",\"WS\":" + WS + ",\"WDI\":" + WDI + "}");
+
+                // httpCode will be negative on error
+                if (httpCode > 0)
+                {
+                    // HTTP header has been send and Server response header has been handled
+                    Serial.printf("[HTTP] POST... code: %d\n", httpCode);
+
+                    // file found at server
+                    if (httpCode == HTTP_CODE_OK)
+                    {
+                        const String &payload = http.getString();
+                        Serial.println("received payload:\n<<");
+                        Serial.println(payload);
+                        Serial.println(">>");
+                    }
+                }
+                else
+                {
+                    Serial.printf("[HTTP] POST... failed, error: %s\n", http.errorToString(httpCode).c_str());
+                }
+                http.end();
             }
         }
-        else
+    }else{
+        wifi_station_connect();
+        while (WiFi.status() != WL_CONNECTED)
         {
-            Serial.printf("[HTTP] POST... failed, error: %s\n", http.errorToString(httpCode).c_str());
+            delay(1000);
+            Serial.print(".");
         }
-        http.end();
     }
 }

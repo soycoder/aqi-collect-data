@@ -163,7 +163,7 @@ def main():
         minute = '{:%M}'.format(datetime.datetime.now())
         second = '{:%S}'.format(datetime.datetime.now())
         Timestamp = '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now())
-        # TimeRecord = '{:%Y-%m-%d}'.format(datetime.datetime.now())
+        TimeRecord = '{:%Y-%m-%d}'.format(datetime.datetime.now())
         if second == '59':
             isWrited = False
             lightLevel = readLight()
@@ -181,7 +181,7 @@ def main():
 
 
             # ------Send DB----
-            sText = "aqi:"
+            sText = "aqi"
             for key, val in dict_aqi.items():
                 print(key, "=>", val)
                 if key == 'TIME':
@@ -191,6 +191,18 @@ def main():
             sTest = sText.encode('utf-8')
             print(sText)
             sendDB(sTest)
+            # ------Hourly-----
+            if minute == '00':
+                sText = "hourly"
+                for key, val in dict_aqi.items():
+                    print(key, "=>", val)
+                    if key == 'TIME':
+                        pass
+                    sText = sText + ":" + val
+                # print(sText)
+                sTest = sText.encode('utf-8')
+                print(sText)
+                sendDB(sTest)
 
             # ---------
             filename = '/home/pi/Desktop/aqi-collect-data/data/'+TimeRecord+'-aqi.csv'
